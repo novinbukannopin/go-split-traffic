@@ -3,9 +3,8 @@ FROM golang:1.22 AS builder
 
 WORKDIR /app
 
-# Copy go.mod (aja, kalau go.sum belum ada)
-COPY go.mod ./
-RUN go mod tidy
+COPY go.mod go.sum* ./
+RUN go mod download
 
 # Copy source code
 COPY . .
@@ -19,6 +18,7 @@ FROM gcr.io/distroless/base-debian12
 WORKDIR /app
 COPY --from=builder /app/server /app/server
 
+# Default env for Cloud Run
 ENV PORT=8080
 ENV VERSION=v1
 
