@@ -2,11 +2,16 @@
 FROM golang:1.22 AS builder
 
 WORKDIR /app
+
+# Copy dependency files first (cache friendly)
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
 COPY . .
 
-RUN go mod init app && \
-    go mod tidy && \
-    go build -o server .
+# Build binary
+RUN go build -o server .
 
 # Step 2: Run stage
 FROM gcr.io/distroless/base-debian12
@@ -16,7 +21,6 @@ COPY --from=builder /app/server /app/server
 
 # Cloud Run expects PORT env
 ENV PORT=8080
-# Default version
 ENV VERSION=v1
 
 CMD ["/app/server"]
